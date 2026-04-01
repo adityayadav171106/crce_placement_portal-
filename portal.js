@@ -231,7 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserInfo();
     loadProfile();
     renderInternships();
-    renderRecruiters();
     handleHashNavigation();
     loadResumeBuilder();
 });
@@ -304,6 +303,19 @@ function toggleSidebar() {
 function closeSidebar() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+function collapseSidebar() {
+    document.body.classList.toggle('sidebar-collapsed');
+    const btn = document.getElementById('sidebarCollapseBtn');
+    const icon = btn.querySelector('.material-icons-outlined');
+    if (document.body.classList.contains('sidebar-collapsed')) {
+        icon.textContent = 'chevron_right';
+        btn.title = 'Expand sidebar';
+    } else {
+        icon.textContent = 'chevron_left';
+        btn.title = 'Collapse sidebar';
+    }
 }
 
 // ========== TOAST ==========
@@ -612,16 +624,5 @@ function filterInternships() {
 }
 
 // ========== RECRUITERS ==========
-function renderRecruiters() {
-    const grid = document.getElementById('recruiterGrid');
-    grid.innerHTML = recruiters.map(r => `
-        <div class="recruiter-card">
-            <div class="recruiter-logo">
-                <img src="${r.logo}" alt="${r.name}" onerror="this.parentElement.innerHTML='<span style=\\"font-size:1.5rem;font-weight:700;color:#0a192f;\\">${r.name.charAt(0)}</span>'">
-            </div>
-            <h4>${r.name}</h4>
-            <p class="roles">${r.roles}</p>
-            <p class="package">${r.package}</p>
-        </div>
-    `).join('');
-}
+// Recruiter section removed from portal
+

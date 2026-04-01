@@ -276,6 +276,76 @@ body {
     border-top: 1px solid var(--border);
 }
 
+/* Collapse Button */
+.sidebar-collapse-btn {
+    position: absolute;
+    top: 50%;
+    right: -14px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--section-bg);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 201;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.sidebar-collapse-btn:hover {
+    background: var(--primary-gold);
+    color: #000;
+    border-color: var(--primary-gold);
+}
+
+.sidebar-collapse-btn .material-icons-outlined {
+    font-size: 18px;
+}
+
+/* ============================
+   SIDEBAR COLLAPSED STATE
+   ============================ */
+.sidebar-collapsed .sidebar {
+    width: 68px;
+}
+
+.sidebar-collapsed .sidebar .sidebar-profile {
+    justify-content: center;
+    padding: 1rem 0.5rem;
+}
+
+.sidebar-collapsed .sidebar .sidebar-user-info {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar .nav-label {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar .nav-item {
+    justify-content: center;
+    padding: 0.85rem 0;
+    border-left: 3px solid transparent;
+    gap: 0;
+}
+
+.sidebar-collapsed .sidebar .sidebar-collapse-btn {
+    right: -14px;
+}
+
+.sidebar-collapsed .app-bar {
+    left: 68px;
+}
+
+.sidebar-collapsed .main-content {
+    margin-left: 68px;
+}
+
 /* ============================
    MAIN CONTENT
    ============================ */
@@ -1262,6 +1332,10 @@ body {
 
     .menu-toggle {
         display: flex;
+    }
+
+    .sidebar-collapse-btn {
+        display: none;
     }
 
     .internship-grid {
