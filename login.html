@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Login | Fr. CRCE Placement Cell</title>
+    <title>Login | Fr. CRCE Placement Cell</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <style>
@@ -16,6 +16,7 @@
             --text-light: #ffffff;
             --text-dim: #ccd6f6;
             --error: #ef5350;
+            --success: #10b981;
         }
 
         * {
@@ -32,7 +33,6 @@
             align-items: center;
             justify-content: center;
             color: var(--text-light);
-            overflow: hidden;
         }
 
         .login-bg {
@@ -47,51 +47,168 @@
             position: relative;
             z-index: 1;
             width: 100%;
-            max-width: 440px;
+            max-width: 480px;
             padding: 2rem;
         }
 
         .login-card {
-            background: rgba(13, 30, 54, 0.85);
+            background: rgba(13, 30, 54, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 20px;
-            padding: 3rem 2.5rem;
+            padding: 2.5rem 2.5rem 2rem;
             backdrop-filter: blur(20px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
+        /* ── Header ── */
         .login-header {
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
         }
 
         .login-header img {
-            height: 70px;
-            margin-bottom: 1rem;
+            height: 65px;
+            margin-bottom: 0.8rem;
         }
 
         .login-header h1 {
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.5px;
             margin-bottom: 0.3rem;
         }
 
         .login-header p {
             color: var(--text-dim);
-            font-size: 0.85rem;
+            font-size: 0.83rem;
         }
 
+        /* ── Role Selector ── */
+        .role-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+            margin-bottom: 1.8rem;
+        }
+
+        .role-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 0.75rem 0.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.25s;
+        }
+
+        .role-btn .material-icons-outlined {
+            font-size: 24px;
+        }
+
+        .role-btn:hover {
+            border-color: var(--primary-gold);
+            color: var(--primary-gold);
+            background: rgba(241, 179, 53, 0.07);
+        }
+
+        .role-btn.active {
+            border-color: var(--primary-gold);
+            background: rgba(241, 179, 53, 0.12);
+            color: var(--primary-gold);
+            box-shadow: 0 0 0 2px rgba(241, 179, 53, 0.2);
+        }
+
+        /* ── Role Badge ── */
+        .role-badge {
+            text-align: center;
+            margin-bottom: 1.4rem;
+        }
+
+        .role-badge span {
+            display: inline-block;
+            padding: 0.35rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(241, 179, 53, 0.15);
+            border: 1px solid var(--primary-gold);
+            color: var(--primary-gold);
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Gmail Button ── */
+        .btn-google {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.2s;
+            margin-bottom: 1.4rem;
+        }
+
+        .btn-google:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-google:active {
+            transform: translateY(0);
+        }
+
+        .btn-google svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        /* ── Divider ── */
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.4rem;
+            color: rgba(204, 214, 246, 0.4);
+            font-size: 0.8rem;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* ── Form Fields ── */
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
         }
 
         .form-group label {
             display: block;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 500;
             color: var(--text-dim);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.45rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -107,16 +224,33 @@
             transform: translateY(-50%);
             font-size: 20px;
             color: var(--text-dim);
+            pointer-events: none;
+        }
+
+        .input-wrapper .toggle-pw {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: var(--text-dim);
+            cursor: pointer;
+            pointer-events: all;
+            transition: color 0.2s;
+        }
+
+        .input-wrapper .toggle-pw:hover {
+            color: var(--primary-gold);
         }
 
         .form-group input {
             width: 100%;
-            padding: 0.9rem 1rem 0.9rem 46px;
+            padding: 0.88rem 2.8rem 0.88rem 46px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             color: var(--text-light);
-            font-size: 0.95rem;
+            font-size: 0.93rem;
             font-family: 'Inter', sans-serif;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
@@ -128,15 +262,51 @@
         }
 
         .form-group input::placeholder {
-            color: rgba(204, 214, 246, 0.4);
+            color: rgba(204, 214, 246, 0.35);
         }
 
+        .error-msg {
+            color: var(--error);
+            font-size: 0.76rem;
+            margin-top: 0.35rem;
+            display: none;
+        }
+
+        /* ── Set Password Panel ── */
+        .set-password-panel {
+            display: none;
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 12px;
+            padding: 1.1rem 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .set-password-panel.visible {
+            display: block;
+        }
+
+        .set-password-panel .panel-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--success);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ── Form Options ── */
         .form-options {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             font-size: 0.82rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .form-options label {
@@ -156,12 +326,35 @@
         .form-options a {
             color: var(--primary-gold);
             text-decoration: none;
+            font-size: 0.82rem;
         }
 
         .form-options a:hover {
             text-decoration: underline;
         }
 
+        /* ── Action Links ── */
+        .action-links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.82rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .action-links a {
+            color: var(--primary-gold);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .action-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Submit Button ── */
         .btn-login {
             width: 100%;
             padding: 1rem;
@@ -179,13 +372,14 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(241, 179, 53, 0.3);
+            box-shadow: 0 8px 25px rgba(241, 179, 53, 0.35);
         }
 
         .btn-login:active {
             transform: translateY(0);
         }
 
+        /* ── Footer ── */
         .login-footer {
             text-align: center;
             margin-top: 1.5rem;
@@ -205,20 +399,29 @@
             color: var(--primary-gold);
         }
 
-        .error-msg {
-            color: var(--error);
-            font-size: 0.78rem;
-            margin-top: 0.4rem;
-            display: none;
+        /* ── Action Links inner label ── */
+        .action-links-remember {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.82rem;
         }
 
+        /* ── Responsive ── */
         @media (max-width: 480px) {
             .login-card {
-                padding: 2rem 1.5rem;
+                padding: 2rem 1.5rem 1.5rem;
             }
 
             .login-container {
                 padding: 1rem;
+            }
+
+            .role-btn {
+                font-size: 0.7rem;
+                padding: 0.65rem 0.3rem;
             }
         }
     </style>
@@ -229,39 +432,109 @@
 
     <div class="login-container">
         <div class="login-card">
+
+            <!-- Header -->
             <div class="login-header">
                 <img src="HEADER_LOGO.png" alt="CRCE Logo">
                 <h1>Fr. CRCE Placement Cell</h1>
-                <p>Student Portal Login</p>
+                <p>Sign in to your portal</p>
             </div>
 
+            <!-- Role Selector -->
+            <div class="role-selector" id="roleSelector">
+                <button class="role-btn active" data-role="student" onclick="selectRole('student')">
+                    <span class="material-icons-outlined">school</span>
+                    Student
+                </button>
+                <button class="role-btn" data-role="faculty" onclick="selectRole('faculty')">
+                    <span class="material-icons-outlined">assignment_ind</span>
+                    Faculty
+                </button>
+                <button class="role-btn" data-role="recruiter" onclick="selectRole('recruiter')">
+                    <span class="material-icons-outlined">business_center</span>
+                    Recruiter
+                </button>
+            </div>
+
+            <!-- Active Role Badge -->
+            <div class="role-badge">
+                <span id="roleBadge">Signing in as Student</span>
+            </div>
+
+            <!-- Google Sign-In -->
+            <button class="btn-google" onclick="handleGoogleLogin()">
+                <!-- Google "G" SVG icon -->
+                <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    <path fill="none" d="M0 0h48v48H0z"/>
+                </svg>
+                Continue with Google (Gmail)
+            </button>
+
+            <div class="or-divider">or sign in with email</div>
+
+            <!-- Login Form -->
             <form id="loginForm" onsubmit="handleLogin(event)">
+
                 <div class="form-group">
-                    <label>Email Address</label>
+                    <label>Gmail / Email Address</label>
                     <div class="input-wrapper">
                         <span class="material-icons-outlined">email</span>
-                        <input type="email" id="email" placeholder="student@crce.edu.in" required>
+                        <input type="email" id="email" placeholder="you@gmail.com" required>
                     </div>
-                    <p class="error-msg" id="emailError">Please enter a valid email address</p>
+                    <p class="error-msg" id="emailError">Please enter a valid email address.</p>
                 </div>
 
                 <div class="form-group">
                     <label>Password</label>
                     <div class="input-wrapper">
                         <span class="material-icons-outlined">lock</span>
-                        <input type="password" id="password" placeholder="Enter your password" required>
+                        <input type="password" id="password" placeholder="Enter your password">
+                        <span class="material-icons-outlined toggle-pw" id="togglePw" onclick="togglePassword()">visibility</span>
                     </div>
-                    <p class="error-msg" id="passwordError">Password must be at least 6 characters</p>
+                    <p class="error-msg" id="passwordError">Password must be at least 6 characters.</p>
                 </div>
 
-                <div class="form-options">
-                    <label>
-                        <input type="checkbox" checked> Remember me
+                <!-- Set / Change Password Panel -->
+                <div class="set-password-panel" id="setPasswordPanel">
+                    <p class="panel-title">
+                        <span class="material-icons-outlined" style="font-size:16px;">lock_reset</span>
+                        Set / Change Password
+                    </p>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label>New Password</label>
+                        <div class="input-wrapper">
+                            <span class="material-icons-outlined">lock_open</span>
+                            <input type="password" id="newPassword" placeholder="Create a new password">
+                            <span class="material-icons-outlined toggle-pw" onclick="toggleNewPassword()">visibility</span>
+                        </div>
+                        <p class="error-msg" id="newPasswordError">New password must be at least 6 characters.</p>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Confirm New Password</label>
+                        <div class="input-wrapper">
+                            <span class="material-icons-outlined">lock_open</span>
+                            <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                        </div>
+                        <p class="error-msg" id="confirmPasswordError">Passwords do not match.</p>
+                    </div>
+                </div>
+
+                <div class="action-links">
+                    <label class="action-links-remember">
+                        <input type="checkbox" id="rememberMe" checked style="accent-color:var(--primary-gold);width:15px;height:15px;">
+                        Remember me
                     </label>
-                    <a href="#">Forgot Password?</a>
+                    <div style="display:flex;gap:1rem;">
+                        <a onclick="toggleSetPassword()">Set Password</a>
+                        <a href="#">Forgot Password?</a>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn-login">Sign In</button>
+                <button type="submit" class="btn-login" id="submitBtn">Sign In</button>
             </form>
 
             <div class="login-footer">
@@ -274,35 +547,136 @@
     </div>
 
     <script>
+        // ── Auto-select role from URL hash (e.g. login.html#recruiter) ──
+        (function () {
+            const hash = window.location.hash.replace('#', '');
+            if (['student', 'faculty', 'recruiter'].includes(hash)) {
+                window.addEventListener('DOMContentLoaded', () => selectRole(hash));
+            }
+        })();
+
+        // ── Role Management ──────────────────────────────────
+        // Note: Update the 'redirect' values below once faculty-portal.html and
+        // recruiter-portal.html are created in the project.
+        const rolePlaceholders = {
+            student:   { email: 'student@crce.edu.in',  badge: 'Signing in as Student',   redirect: 'student-portal.html' },
+            faculty:   { email: 'faculty@crce.edu.in',  badge: 'Signing in as Faculty',   redirect: 'student-portal.html' },
+            recruiter: { email: 'hr@company.com',        badge: 'Signing in as Recruiter', redirect: 'student-portal.html' }
+        };
+
+        let currentRole = 'student';
+
+        function selectRole(role) {
+            currentRole = role;
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.role === role);
+            });
+            const cfg = rolePlaceholders[role];
+            document.getElementById('email').placeholder = cfg.email;
+            document.getElementById('roleBadge').textContent = cfg.badge;
+        }
+
+        // ── Google Login ────────────────────────────────────
+        function handleGoogleLogin() {
+            const cfg = rolePlaceholders[currentRole];
+            alert('Google OAuth would redirect to your Gmail sign-in here.\nRole: ' + cfg.badge.replace('Signing in as ', '') + '\n\n(Connect a backend/Firebase for real authentication.)');
+        }
+
+        // ── Password Visibility ──────────────────────────────
+        function togglePassword() {
+            const inp = document.getElementById('password');
+            const icon = document.getElementById('togglePw');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                inp.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        function toggleNewPassword() {
+            const inp = document.getElementById('newPassword');
+            const icons = document.querySelectorAll('#setPasswordPanel .toggle-pw');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                if (icons[0]) icons[0].textContent = 'visibility_off';
+            } else {
+                inp.type = 'password';
+                if (icons[0]) icons[0].textContent = 'visibility';
+            }
+        }
+
+        // ── Set Password Panel ───────────────────────────────
+        let setPasswordOpen = false;
+
+        function toggleSetPassword() {
+            setPasswordOpen = !setPasswordOpen;
+            const panel = document.getElementById('setPasswordPanel');
+            panel.classList.toggle('visible', setPasswordOpen);
+            document.getElementById('submitBtn').textContent = setPasswordOpen ? 'Set Password & Sign In' : 'Sign In';
+            if (setPasswordOpen) {
+                document.getElementById('password').placeholder = 'Enter current password (if you have one)';
+            } else {
+                document.getElementById('password').placeholder = 'Enter your password';
+                ['newPassword', 'confirmPassword'].forEach(id => document.getElementById(id).value = '');
+                ['newPasswordError', 'confirmPasswordError'].forEach(id => {
+                    document.getElementById(id).style.display = 'none';
+                });
+            }
+        }
+
+        // ── Form Submission ──────────────────────────────────
         function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             let valid = true;
 
-            if (!email || !email.includes('@')) {
+            // Validate email
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 document.getElementById('emailError').style.display = 'block';
                 valid = false;
             } else {
                 document.getElementById('emailError').style.display = 'none';
             }
 
-            if (!password || password.length < 6) {
+            // Validate password — required when NOT in "set password" mode
+            if (!setPasswordOpen && password.length < 6) {
                 document.getElementById('passwordError').style.display = 'block';
                 valid = false;
             } else {
                 document.getElementById('passwordError').style.display = 'none';
             }
 
+            // Validate new password fields if panel is open
+            if (setPasswordOpen) {
+                const newPw = document.getElementById('newPassword').value;
+                const confirmPw = document.getElementById('confirmPassword').value;
+                if (newPw.length < 6) {
+                    document.getElementById('newPasswordError').style.display = 'block';
+                    valid = false;
+                } else {
+                    document.getElementById('newPasswordError').style.display = 'none';
+                }
+                if (newPw !== confirmPw) {
+                    document.getElementById('confirmPasswordError').style.display = 'block';
+                    valid = false;
+                } else {
+                    document.getElementById('confirmPasswordError').style.display = 'none';
+                }
+            }
+
             if (valid) {
-                // Store mock user session
+                const cfg = rolePlaceholders[currentRole];
                 const user = {
                     name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
                     email: email,
+                    role: currentRole,
                     loggedIn: true
                 };
                 localStorage.setItem('crce_user', JSON.stringify(user));
-                window.location.href = 'student-portal.html';
+                window.location.href = cfg.redirect;
             }
         }
     </script>
