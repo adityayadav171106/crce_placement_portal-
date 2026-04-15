@@ -538,7 +538,7 @@
             </form>
 
             <div class="login-footer">
-                <a href="index.html">
+                <a href="/">
                     <span class="material-icons-outlined" style="font-size:18px;">arrow_back</span>
                     Back to Home
                 </a>
@@ -547,7 +547,7 @@
     </div>
 
     <script>
-        // ── Auto-select role from URL hash (e.g. login.html#recruiter) ──
+        // ── Auto-select role from URL hash (e.g. /login#recruiter) ──
         (function () {
             const hash = window.location.hash.replace('#', '');
             if (['student', 'faculty', 'recruiter'].includes(hash)) {
@@ -559,9 +559,9 @@
         // Note: Update the 'redirect' values below once faculty-portal.html and
         // recruiter-portal.html are created in the project.
         const rolePlaceholders = {
-            student:   { email: 'student@crce.edu.in',  badge: 'Signing in as Student',   redirect: 'student-portal.html' },
-            faculty:   { email: 'faculty@crce.edu.in',  badge: 'Signing in as Faculty',   redirect: 'student-portal.html' },
-            recruiter: { email: 'hr@company.com',        badge: 'Signing in as Recruiter', redirect: 'student-portal.html' }
+            student:   { email: 'student@crce.edu.in',  badge: 'Signing in as Student',   redirect: '/student-portal' },
+            faculty:   { email: 'faculty@crce.edu.in',  badge: 'Signing in as Faculty',   redirect: '/student-portal' },
+            recruiter: { email: 'hr@company.com',        badge: 'Signing in as Recruiter', redirect: '/student-portal' }
         };
 
         let currentRole = 'student';

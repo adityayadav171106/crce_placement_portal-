@@ -1,0 +1,17 @@
+{
+  "name": "crce-placement-cell",
+  "version": "1.0.0",
+  "description": "Node.js site for the Fr. CRCE Placement Cell portal.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "nodejs",
+    "placement",
+    "portal"
+  ],
+  "author": "",
+  "license": "ISC"
+}

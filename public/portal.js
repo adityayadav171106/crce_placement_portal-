@@ -241,7 +241,7 @@ window.addEventListener('hashchange', handleHashNavigation);
 function checkAuth() {
     const user = JSON.parse(localStorage.getItem('crce_user'));
     if (!user || !user.loggedIn) {
-        window.location.href = 'login.html';
+        window.location.href = '/login';
     }
 }
 
@@ -261,7 +261,7 @@ function loadUserInfo() {
 
 function handleLogout() {
     localStorage.removeItem('crce_user');
-    window.location.href = 'login.html';
+    window.location.href = '/login';
 }
 
 // ========== NAVIGATION ==========
