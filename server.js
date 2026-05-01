@@ -3,15 +3,15 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const PORT = process.env.PORT || 3000;
+const DIST_DIR = path.join(__dirname, 'dist');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 const routes = {
   '/': 'index.html',
-  '/login': 'login.html',
-  '/student-portal': 'student-portal.html',
-  '/index.html': 'index.html',
-  '/login.html': 'login.html',
-  '/student-portal.html': 'student-portal.html'
+  '/login': 'index.html',
+  '/student-portal': 'index.html',
+  '/faculty-portal': 'index.html',
+  '/index.html': 'index.html'
 };
 
 const mimeTypes = {
@@ -37,7 +37,7 @@ function toPublicPath(requestUrl) {
   }
 
   if (routes[pathname]) {
-    return path.join(PUBLIC_DIR, routes[pathname]);
+    return path.join(DIST_DIR, routes[pathname]);
   }
 
   const relativeRequestPath = pathname.replace(/^\/+/, '');
@@ -47,8 +47,8 @@ function toPublicPath(requestUrl) {
     return null;
   }
 
-  const filePath = path.join(PUBLIC_DIR, normalizedPath);
-  const relativePath = path.relative(PUBLIC_DIR, filePath);
+  const filePath = path.join(DIST_DIR, normalizedPath);
+  const relativePath = path.relative(DIST_DIR, filePath);
 
   if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
     return null;
@@ -69,8 +69,32 @@ async function serveFile(res, filePath) {
     res.end(content);
   } catch (error) {
     if (error.code === 'ENOENT' || error.code === 'EISDIR') {
+      const fallbackFile = path.join(DIST_DIR, 'index.html');
+      try {
+        const fallbackContent = await fs.readFile(fallbackFile);
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-cache'
+        });
+        res.end(fallbackContent);
+        return;
+      } catch {
+        const publicFallback = path.join(PUBLIC_DIR, 'index.html');
+        try {
+          const publicContent = await fs.readFile(publicFallback);
+          res.writeHead(200, {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache'
+          });
+          res.end(publicContent);
+          return;
+        } catch {
+          // Continue to the 404 response below.
+        }
+      }
+
       res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end('<h1>404</h1><p>Page not found.</p>');
+      res.end('<h1>404</h1><p>Build the React app with <code>npm run build</code>, then start the server again.</p>');
       return;
     }
 
