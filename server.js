@@ -1,134 +1,98 @@
-const http = require('http');
-const fs = require('fs/promises');
+require('dotenv').config({ quiet: true });
+
+const cors = require('cors');
+const express = require('express');
+const mongoose = require('mongoose');
 const path = require('path');
 
+const applicationRoutes = require('./server/routes/applicationRoutes');
+const authRoutes = require('./server/routes/authRoutes');
+const listingRequestRoutes = require('./server/routes/listingRequestRoutes');
+const opportunityRoutes = require('./server/routes/opportunityRoutes');
+const resumeRequestRoutes = require('./server/routes/resumeRequestRoutes');
+const studentRoutes = require('./server/routes/studentRoutes');
+
+const app = express();
 const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/crce-placement-cell';
 const DIST_DIR = path.join(__dirname, 'dist');
-const PUBLIC_DIR = path.join(__dirname, 'public');
 
-const routes = {
-  '/': 'index.html',
-  '/login': 'index.html',
-  '/student-portal': 'index.html',
-  '/faculty-portal': 'index.html',
-  '/index.html': 'index.html'
-};
+app.use(cors({
+  origin: process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',') : true,
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
 
-const mimeTypes = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.json': 'application/json; charset=utf-8',
-  '.txt': 'text/plain; charset=utf-8'
-};
+app.get('/api/health', (req, res) => {
+  res.json({
+    ok: true,
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
 
-function toPublicPath(requestUrl) {
-  const url = new URL(requestUrl, `http://localhost:${PORT}`);
-  let pathname = decodeURIComponent(url.pathname);
-
-  if (pathname.endsWith('/') && pathname !== '/') {
-    pathname = pathname.slice(0, -1);
-  }
-
-  if (routes[pathname]) {
-    return path.join(DIST_DIR, routes[pathname]);
-  }
-
-  const relativeRequestPath = pathname.replace(/^\/+/, '');
-  const normalizedPath = path.normalize(relativeRequestPath);
-
-  if (normalizedPath.startsWith('..') || path.isAbsolute(normalizedPath)) {
-    return null;
-  }
-
-  const filePath = path.join(DIST_DIR, normalizedPath);
-  const relativePath = path.relative(DIST_DIR, filePath);
-
-  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-    return null;
-  }
-
-  return filePath;
-}
-
-async function serveFile(res, filePath) {
-  try {
-    const content = await fs.readFile(filePath);
-    const ext = path.extname(filePath).toLowerCase();
-
-    res.writeHead(200, {
-      'Content-Type': mimeTypes[ext] || 'application/octet-stream',
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600'
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    res.status(503).json({
+      message: 'MongoDB is not connected. Set MONGO_URI and make sure MongoDB is running.'
     });
-    res.end(content);
-  } catch (error) {
-    if (error.code === 'ENOENT' || error.code === 'EISDIR') {
-      const fallbackFile = path.join(DIST_DIR, 'index.html');
-      try {
-        const fallbackContent = await fs.readFile(fallbackFile);
-        res.writeHead(200, {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-cache'
-        });
-        res.end(fallbackContent);
-        return;
-      } catch {
-        const publicFallback = path.join(PUBLIC_DIR, 'index.html');
-        try {
-          const publicContent = await fs.readFile(publicFallback);
-          res.writeHead(200, {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-cache'
-          });
-          res.end(publicContent);
-          return;
-        } catch {
-          // Continue to the 404 response below.
-        }
-      }
+    return;
+  }
 
-      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end('<h1>404</h1><p>Build the React app with <code>npm run build</code>, then start the server again.</p>');
-      return;
+  next();
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/resume-requests', resumeRequestRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/opportunities', opportunityRoutes);
+app.use('/api/opportunity-listing-requests', listingRequestRoutes);
+
+app.use(express.static(DIST_DIR, {
+  maxAge: '1h',
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
     }
-
-    console.error(error);
-    res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end('<h1>500</h1><p>Something went wrong.</p>');
   }
-}
+}));
 
-const server = http.createServer((req, res) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    res.writeHead(405, { Allow: 'GET, HEAD' });
-    res.end();
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    next();
     return;
   }
 
-  const requestUrl = new URL(req.url, `http://localhost:${PORT}`);
-  if (requestUrl.pathname.length > 1 && requestUrl.pathname.endsWith('/')) {
-    requestUrl.pathname = requestUrl.pathname.slice(0, -1);
-    res.writeHead(301, { Location: `${requestUrl.pathname}${requestUrl.search}` });
-    res.end();
-    return;
-  }
-
-  const filePath = toPublicPath(req.url);
-  if (!filePath) {
-    res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end('<h1>400</h1><p>Invalid request.</p>');
-    return;
-  }
-
-  serveFile(res, filePath);
+  res.sendFile(path.join(DIST_DIR, 'index.html'), error => {
+    if (error) {
+      res.status(404).send('<h1>404</h1><p>Build the React app with <code>npm run build</code>, then start the server again.</p>');
+    }
+  });
 });
 
-server.listen(PORT, () => {
-  console.log(`CRCE Placement Cell site running at http://localhost:${PORT}`);
+app.use((error, req, res, next) => {
+  console.error(error);
+
+  if (res.headersSent) {
+    next(error);
+    return;
+  }
+
+  const status = error.status || 500;
+  res.status(status).json({
+    message: status === 500 ? 'Something went wrong.' : error.message
+  });
 });
+
+app.listen(PORT, () => {
+  console.log(`CRCE Placement Cell MERN server running at http://localhost:${PORT}`);
+});
+
+mongoose
+  .connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
+  .then(() => {
+    console.log('MongoDB connected');
+  })
+  .catch(error => {
+    console.error('MongoDB connection failed:', error.message);
+  });

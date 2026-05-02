@@ -84,6 +84,9 @@ export default function RecruiterPortalPage({ navigate }) {
   const [toast, setToast] = useState('');
 
   useEffect(() => {
+    let active = true;
+
+    async function loadRecruiterData() {
     const savedUser = JSON.parse(localStorage.getItem('crce_user') || 'null');
     if (!savedUser?.loggedIn) {
       navigate('/login');
@@ -98,14 +101,38 @@ export default function RecruiterPortalPage({ navigate }) {
       return;
     }
 
+    const [
+      studentRows,
+      postedInternshipRows,
+      postedPlacementRows,
+      listingRequestRows,
+      internshipApplicationRows,
+      placementApplicationRows
+    ] = await Promise.all([
+      getStudentRecords(facultySeedStudents),
+      getPostedInternships(),
+      getPostedPlacements(),
+      getOpportunityListingRequests(),
+      getInternshipApplications(),
+      getPlacementApplications()
+    ]);
+
+    if (!active) return;
+
     setUser(savedUser);
     setForm(current => ({ ...current, company: savedUser.name || '' }));
-    setStudents(getStudentRecords(facultySeedStudents));
-    setPostedInternships(getPostedInternships());
-    setPostedPlacements(getPostedPlacements());
-    setListingRequests(getOpportunityListingRequests());
-    setInternshipApplications(getInternshipApplications());
-    setPlacementApplications(getPlacementApplications());
+    setStudents(studentRows);
+    setPostedInternships(postedInternshipRows);
+    setPostedPlacements(postedPlacementRows);
+    setListingRequests(listingRequestRows);
+    setInternshipApplications(internshipApplicationRows);
+    setPlacementApplications(placementApplicationRows);
+    }
+
+    loadRecruiterData();
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -178,7 +205,7 @@ export default function RecruiterPortalPage({ navigate }) {
     });
   };
 
-  const submitOpportunity = event => {
+  const submitOpportunity = async event => {
     event.preventDefault();
     const domains = buildDomains(form);
 
@@ -234,7 +261,7 @@ export default function RecruiterPortalPage({ navigate }) {
 
       const needsFacultyApproval = form.mode === 'offline' && overlapsAcademicWindow(form.startDate, form.endDate);
       if (needsFacultyApproval) {
-        const next = addOpportunityListingRequest({
+        const next = await addOpportunityListingRequest({
           id: `listing-${id}`,
           type: 'internship',
           status: 'pending',
@@ -247,7 +274,7 @@ export default function RecruiterPortalPage({ navigate }) {
         setListingRequests(next);
         setToast('Offline internship sent to faculty for listing approval.');
       } else {
-        const next = addPostedInternship(payload);
+        const next = await addPostedInternship(payload);
         setPostedInternships(next);
         setToast('Internship posted to student opportunities.');
       }
@@ -257,7 +284,7 @@ export default function RecruiterPortalPage({ navigate }) {
         package: form.package.trim() || 'As per company policy',
         employmentType: form.employmentType || 'Full Time'
       };
-      const next = addPostedPlacement(payload);
+      const next = await addPostedPlacement(payload);
       setPostedPlacements(next);
       setToast('Full time opportunity posted to student opportunities.');
     }

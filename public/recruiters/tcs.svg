@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="120" viewBox="0 0 320 120" role="img" aria-label="TCS logo">
+  <rect width="320" height="120" rx="18" fill="#ffffff"/>
+  <rect x="18" y="18" width="84" height="84" rx="18" fill="#1f4e79"/>
+  <path d="M40 42h40v10H65v36H55V52H40z" fill="#ffffff"/>
+  <text x="118" y="56" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#1f4e79">TCS</text>
+  <text x="118" y="84" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#5c6570">Tata Consultancy Services</text>
+</svg>

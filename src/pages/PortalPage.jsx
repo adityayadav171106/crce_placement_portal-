@@ -9,6 +9,7 @@ import {
   getPostedPlacements,
   getPlacementApplications,
   getResumeRequests,
+  getStudentRecords,
   upsertStudentRecord
 } from '../data/portalStorage.js';
 
@@ -54,6 +55,9 @@ export default function PortalPage({ navigate }) {
   const [duration, setDuration] = useState('');
 
   useEffect(() => {
+    let active = true;
+
+    async function loadPortalData() {
     const savedUser = JSON.parse(localStorage.getItem('crce_user') || 'null');
     if (!savedUser?.loggedIn) {
       navigate('/login');
@@ -68,18 +72,56 @@ export default function PortalPage({ navigate }) {
       return;
     }
 
+    const [
+      students,
+      resumeRequestRows,
+      internshipApplicationRows,
+      placementApplicationRows,
+      postedInternshipRows,
+      postedPlacementRows
+    ] = await Promise.all([
+      getStudentRecords(facultySeedStudents),
+      getResumeRequests(),
+      getInternshipApplications(),
+      getPlacementApplications(),
+      getPostedInternships(),
+      getPostedPlacements()
+    ]);
+
+    if (!active) return;
+
     const savedProfile = JSON.parse(localStorage.getItem('crce_profile') || 'null');
-    const nextProfile = savedProfile || { ...emptyProfile, name: savedUser.name || '', email: savedUser.email || '' };
+    const studentRecord = students.find(student => student.email === savedUser.email.toLowerCase());
+    const nextProfile = {
+      ...emptyProfile,
+      ...(studentRecord || {}),
+      ...(savedProfile || {}),
+      name: savedProfile?.name || studentRecord?.name || savedUser.name || '',
+      email: savedUser.email || savedProfile?.email || studentRecord?.email || ''
+    };
+    const nextResume = studentRecord?.resume || {
+      education: localStorage.getItem('crce_resume_education') || '',
+      experience: localStorage.getItem('crce_resume_experience') || '',
+      projects: localStorage.getItem('crce_resume_projects') || '',
+      skills: localStorage.getItem('crce_resume_skills') || ''
+    };
 
     setUser(savedUser);
     setProfile(nextProfile);
-    setPhoto(localStorage.getItem('crce_photo') || '');
-    setResumeRequests(getResumeRequests());
-    setInternshipApplications(getInternshipApplications());
-    setPlacementApplications(getPlacementApplications());
-    setPostedInternships(getPostedInternships());
-    setPostedPlacements(getPostedPlacements());
-    upsertStudentRecord({ ...nextProfile, email: savedUser.email, name: savedUser.name }, facultySeedStudents);
+    setPhoto(studentRecord?.photo || localStorage.getItem('crce_photo') || '');
+    setResume(nextResume);
+    setResumeRequests(resumeRequestRows);
+    setInternshipApplications(internshipApplicationRows);
+    setPlacementApplications(placementApplicationRows);
+    setPostedInternships(postedInternshipRows);
+    setPostedPlacements(postedPlacementRows);
+    await upsertStudentRecord({ ...nextProfile, email: savedUser.email, name: nextProfile.name || savedUser.name }, facultySeedStudents);
+    }
+
+    loadPortalData();
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   const allInternships = useMemo(() => [...postedInternships, ...internships], [postedInternships]);
@@ -140,13 +182,13 @@ export default function PortalPage({ navigate }) {
       }, {});
   }, [placementApplications, user?.email]);
 
-  const updateProfile = event => {
+  const updateProfile = async event => {
     event.preventDefault();
     localStorage.setItem('crce_profile', JSON.stringify(profile));
     const nextUser = { ...user, name: profile.name || user.name, email: profile.email || user.email };
     localStorage.setItem('crce_user', JSON.stringify(nextUser));
     setUser(nextUser);
-    upsertStudentRecord({ ...profile, email: nextUser.email, name: nextUser.name }, facultySeedStudents);
+    await upsertStudentRecord({ ...profile, email: nextUser.email, name: nextUser.name, photo }, facultySeedStudents);
     setToast('Profile saved successfully.');
   };
 
@@ -154,16 +196,22 @@ export default function PortalPage({ navigate }) {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = async e => {
       const result = e.target.result;
       setPhoto(result);
       localStorage.setItem('crce_photo', result);
+      if (user?.email) {
+        await upsertStudentRecord(
+          { ...profile, email: user.email, name: profile.name || user.name, photo: result },
+          facultySeedStudents
+        );
+      }
       setToast('Profile photo updated.');
     };
     reader.readAsDataURL(file);
   };
 
-  const saveResume = () => {
+  const saveResume = async () => {
     Object.entries(resume).forEach(([key, value]) => localStorage.setItem(`crce_resume_${key}`, value));
 
     if (user?.email) {
@@ -175,9 +223,9 @@ export default function PortalPage({ navigate }) {
         status: 'pending',
         resumeSnapshot: { ...resume }
       };
-      const nextRequests = addResumeRequest(request);
+      const nextRequests = await addResumeRequest(request);
       setResumeRequests(nextRequests);
-      upsertStudentRecord(
+      await upsertStudentRecord(
         {
           ...profile,
           name: profile.name || user.name,
@@ -214,7 +262,7 @@ export default function PortalPage({ navigate }) {
     setToast('Resume downloaded.');
   };
 
-  const applyInternship = id => {
+  const applyInternship = async id => {
     if (!user?.email) return;
 
     const existing = internshipApplications.find(item => item.studentEmail === user.email.toLowerCase() && item.internshipId === id && item.status !== 'rejected');
@@ -233,12 +281,12 @@ export default function PortalPage({ navigate }) {
       status: 'pending'
     };
 
-    const nextApplications = addInternshipApplication(application);
+    const nextApplications = await addInternshipApplication(application);
     setInternshipApplications(nextApplications);
     setToast('Internship application submitted for faculty approval.');
   };
 
-  const applyPlacement = id => {
+  const applyPlacement = async id => {
     if (!user?.email) return;
 
     const existing = placementApplications.find(item => item.studentEmail === user.email.toLowerCase() && item.placementId === id && item.status !== 'rejected');
@@ -257,7 +305,7 @@ export default function PortalPage({ navigate }) {
       status: 'pending'
     };
 
-    const nextApplications = addPlacementApplication(application);
+    const nextApplications = await addPlacementApplication(application);
     setPlacementApplications(nextApplications);
     setToast('Placement application submitted for faculty approval.');
   };

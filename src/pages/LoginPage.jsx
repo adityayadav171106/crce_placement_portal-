@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import MagicRings from '../components/MagicRings.jsx';
+import { loginUser } from '../data/portalStorage.js';
 
 const roleConfig = {
   student: { email: 'student@crce.edu.in', label: 'Student', redirect: '/student-portal' },
@@ -19,10 +20,12 @@ export default function LoginPage({ navigate }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const submitLogin = event => {
+  const submitLogin = async event => {
     event.preventDefault();
     const current = roleConfig[role];
+    setError('');
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Enter a valid email address.');
@@ -39,15 +42,21 @@ export default function LoginPage({ navigate }) {
       return;
     }
 
-    const user = {
-      name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase()),
-      email,
-      role,
-      loggedIn: true
-    };
-
-    localStorage.setItem('crce_user', JSON.stringify(user));
-    navigate(current.redirect);
+    try {
+      setLoading(true);
+      await loginUser({
+        email,
+        role,
+        password,
+        setPassword: setPasswordOpen,
+        newPassword
+      });
+      navigate(current.redirect);
+    } catch (apiError) {
+      setError(apiError.message || 'Could not sign in. Check that the backend is running.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -160,8 +169,8 @@ export default function LoginPage({ navigate }) {
 
             {error && <p className="form-error">{error}</p>}
 
-            <button className="btn btn-primary login-submit" type="submit">
-              {setPasswordOpen ? 'Set Password and Sign In' : 'Sign In'}
+            <button className="btn btn-primary login-submit" type="submit" disabled={loading}>
+              {loading ? 'Signing In...' : setPasswordOpen ? 'Set Password and Sign In' : 'Sign In'}
             </button>
           </form>
         </section>

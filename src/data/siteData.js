@@ -1,37 +1,37 @@
 export const recruiters = [
   {
     name: 'TCS',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Tata_Consultancy_Services_Logo.svg',
+    logo: '/recruiters/tcs.svg',
     roles: 'Ninja, Digital, Developer',
     package: '3 - 3.6 LPA'
   },
   {
     name: 'L&T',
-    logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/79/Larsen%26Toubro_logo.svg/512px-Larsen%26Toubro_logo.svg.png',
+    logo: '/recruiters/lnt.svg',
     roles: 'GET, Engineering Roles',
     package: 'Core roles'
   },
   {
     name: 'Morgan Stanley',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Morgan_Stanley_Logo_1.svg/512px-Morgan_Stanley_Logo_1.svg.png',
+    logo: '/recruiters/morgan-stanley.svg',
     roles: 'Technology, Analyst',
     package: 'Campus roles'
   },
   {
     name: 'JP Morgan Chase',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/af/J.P._Morgan_Logo_2008_1.svg',
+    logo: '/recruiters/jpmorgan.svg',
     roles: 'Code for Good, Technology',
     package: 'Up to 18 LPA'
   },
   {
     name: 'Accenture',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Accenture.svg',
+    logo: '/recruiters/accenture.svg',
     roles: 'Consulting, Technology',
     package: 'Campus roles'
   },
   {
     name: 'Godrej',
-    logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/8/85/Godrej_Logo.svg/512px-Godrej_Logo.svg.png',
+    logo: '/recruiters/godrej.svg',
     roles: 'Engineering, Operations',
     package: 'Core roles'
   }

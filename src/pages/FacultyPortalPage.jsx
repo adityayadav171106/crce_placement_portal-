@@ -46,6 +46,9 @@ export default function FacultyPortalPage({ navigate }) {
   });
 
   useEffect(() => {
+    let active = true;
+
+    async function loadFacultyData() {
     const savedUser = JSON.parse(localStorage.getItem('crce_user') || 'null');
     if (!savedUser?.loggedIn) {
       navigate('/login');
@@ -56,16 +59,41 @@ export default function FacultyPortalPage({ navigate }) {
       return;
     }
 
-    const records = getStudentRecords(facultySeedStudents);
+    const [
+      records,
+      resumeRequestRows,
+      internshipApplicationRows,
+      placementApplicationRows,
+      listingRequestRows,
+      postedInternshipRows,
+      postedPlacementRows
+    ] = await Promise.all([
+      getStudentRecords(facultySeedStudents),
+      getResumeRequests(),
+      getInternshipApplications(),
+      getPlacementApplications(),
+      getOpportunityListingRequests(),
+      getPostedInternships(),
+      getPostedPlacements()
+    ]);
+
+    if (!active) return;
+
     setStudents(records);
     setSelectedEmail(records[0]?.email || '');
-    setResumeRequests(getResumeRequests());
-    setInternshipApplications(getInternshipApplications());
-    setPlacementApplications(getPlacementApplications());
-    setListingRequests(getOpportunityListingRequests());
-    setPostedInternships(getPostedInternships());
-    setPostedPlacements(getPostedPlacements());
+    setResumeRequests(resumeRequestRows);
+    setInternshipApplications(internshipApplicationRows);
+    setPlacementApplications(placementApplicationRows);
+    setListingRequests(listingRequestRows);
+    setPostedInternships(postedInternshipRows);
+    setPostedPlacements(postedPlacementRows);
     setUser(savedUser);
+    }
+
+    loadFacultyData();
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -154,35 +182,44 @@ export default function FacultyPortalPage({ navigate }) {
     };
   }, [internshipApplications, listingQueue.length, placementApplications, resumeQueue.length, students]);
 
-  const reviewResume = (id, status) => {
-    const next = updateResumeRequestStatus(id, status, user?.name || 'Faculty');
+  const reviewResume = async (id, status) => {
+    const next = await updateResumeRequestStatus(id, status, user?.name || 'Faculty');
     setResumeRequests(next);
     setToast(`Resume request ${status}.`);
   };
 
-  const reviewInternship = (id, status) => {
-    const next = updateInternshipApplicationStatus(id, status, user?.name || 'Faculty');
+  const reviewInternship = async (id, status) => {
+    const next = await updateInternshipApplicationStatus(id, status, user?.name || 'Faculty');
     setInternshipApplications(next);
     setToast(`Internship application ${status}.`);
   };
 
-  const reviewPlacement = (id, status) => {
-    const next = updatePlacementApplicationStatus(id, status, user?.name || 'Faculty');
+  const reviewPlacement = async (id, status) => {
+    const next = await updatePlacementApplicationStatus(id, status, user?.name || 'Faculty');
     setPlacementApplications(next);
     setToast(`Placement application ${status}.`);
   };
 
-  const reviewListing = (request, status) => {
-    const next = updateOpportunityListingRequestStatus(request.id, status, user?.name || 'Faculty');
+  const reviewListing = async (request, status) => {
+    const next = await updateOpportunityListingRequestStatus(request.id, status, user?.name || 'Faculty');
     setListingRequests(next);
 
     if (status === 'approved' && request.type === 'internship') {
-      const nextPosted = addPostedInternship({
+      const nextPosted = await addPostedInternship({
         ...request.opportunity,
         facultyApprovedAt: new Date().toISOString(),
         facultyReviewer: user?.name || 'Faculty'
       });
       setPostedInternships(nextPosted);
+    }
+
+    if (status === 'approved' && request.type === 'placement') {
+      const nextPosted = await addPostedPlacement({
+        ...request.opportunity,
+        facultyApprovedAt: new Date().toISOString(),
+        facultyReviewer: user?.name || 'Faculty'
+      });
+      setPostedPlacements(nextPosted);
     }
 
     setToast(`Recruiter listing ${status}.`);
@@ -204,7 +241,7 @@ export default function FacultyPortalPage({ navigate }) {
     }));
   };
 
-  const submitOpportunityPost = event => {
+  const submitOpportunityPost = async event => {
     event.preventDefault();
     if (!postForm.company.trim() || !postForm.role.trim() || !postForm.deadline.trim() || !postForm.description.trim()) {
       setToast('Please fill company, role, deadline, and description.');
@@ -233,7 +270,7 @@ export default function FacultyPortalPage({ navigate }) {
         durationWeeks,
         duration: `${durationWeeks} Weeks`
       };
-      const next = addPostedInternship(payload);
+      const next = await addPostedInternship(payload);
       setPostedInternships(next);
       setToast('Internship opportunity posted.');
     } else {
@@ -242,7 +279,7 @@ export default function FacultyPortalPage({ navigate }) {
         package: postForm.package.trim() || 'Rs. 6.0 LPA',
         employmentType: postForm.employmentType || 'Full Time'
       };
-      const next = addPostedPlacement(payload);
+      const next = await addPostedPlacement(payload);
       setPostedPlacements(next);
       setToast('Placement opportunity posted.');
     }

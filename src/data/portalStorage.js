@@ -11,6 +11,8 @@ const STORAGE_KEYS = {
   postedPlacements: 'crce_posted_placements'
 };
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
+
 function getJson(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -28,7 +30,23 @@ function normalizeEmail(email = '') {
   return email.trim().toLowerCase();
 }
 
-export function getStudentRecords(seedStudents = []) {
+async function apiRequest(path, { method = 'GET', body } = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.message || 'Backend request failed.');
+  }
+
+  return payload;
+}
+
+function getLocalStudentRecords(seedStudents = []) {
   const current = getJson(STORAGE_KEYS.studentRecords, []);
   const byEmail = new Map();
 
@@ -43,11 +61,11 @@ export function getStudentRecords(seedStudents = []) {
   return merged;
 }
 
-export function upsertStudentRecord(student, seedStudents = []) {
+function upsertLocalStudentRecord(student, seedStudents = []) {
   const normalized = normalizeEmail(student.email);
   if (!normalized) return [];
 
-  const records = getStudentRecords(seedStudents);
+  const records = getLocalStudentRecords(seedStudents);
   const index = records.findIndex(item => normalizeEmail(item.email) === normalized);
   const nextValue = { ...records[index], ...student, email: normalized };
 
@@ -61,19 +79,15 @@ export function upsertStudentRecord(student, seedStudents = []) {
   return records;
 }
 
-export function getResumeRequests() {
-  return getJson(STORAGE_KEYS.resumeRequests, []);
-}
-
-export function addResumeRequest(request) {
-  const requests = getResumeRequests();
-  const next = [{ ...request }, ...requests];
-  setJson(STORAGE_KEYS.resumeRequests, next);
+function addLocalItem(key, item) {
+  const items = getJson(key, []);
+  const next = [{ ...item }, ...items];
+  setJson(key, next);
   return next;
 }
 
-export function updateResumeRequestStatus(id, status, reviewerName) {
-  const requests = getResumeRequests().map(item => {
+function updateLocalStatus(key, id, status, reviewerName) {
+  const items = getJson(key, []).map(item => {
     if (item.id !== id) return item;
     return {
       ...item,
@@ -82,105 +96,233 @@ export function updateResumeRequestStatus(id, status, reviewerName) {
       reviewer: reviewerName || 'Faculty'
     };
   });
-  setJson(STORAGE_KEYS.resumeRequests, requests);
-  return requests;
+  setJson(key, items);
+  return items;
 }
 
-export function getInternshipApplications() {
-  return getJson(STORAGE_KEYS.internshipApplications, []);
-}
-
-export function addInternshipApplication(application) {
-  const applications = getInternshipApplications();
-  const next = [{ ...application }, ...applications];
-  setJson(STORAGE_KEYS.internshipApplications, next);
-  return next;
-}
-
-export function updateInternshipApplicationStatus(id, status, reviewerName) {
-  const applications = getInternshipApplications().map(item => {
-    if (item.id !== id) return item;
-    return {
-      ...item,
-      status,
-      reviewedAt: new Date().toISOString(),
-      reviewer: reviewerName || 'Faculty'
-    };
+export async function loginUser(credentials) {
+  const data = await apiRequest('/auth/login', {
+    method: 'POST',
+    body: credentials
   });
-  setJson(STORAGE_KEYS.internshipApplications, applications);
-  return applications;
+
+  localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(data.user));
+  return data.user;
 }
 
-export function getPlacementApplications() {
-  return getJson(STORAGE_KEYS.placementApplications, []);
+export async function getStudentRecords(seedStudents = []) {
+  try {
+    const data = seedStudents.length
+      ? await apiRequest('/students/seed', { method: 'POST', body: { students: seedStudents } })
+      : await apiRequest('/students');
+    setJson(STORAGE_KEYS.studentRecords, data.students || []);
+    return data.students || [];
+  } catch {
+    return getLocalStudentRecords(seedStudents);
+  }
 }
 
-export function addPlacementApplication(application) {
-  const applications = getPlacementApplications();
-  const next = [{ ...application }, ...applications];
-  setJson(STORAGE_KEYS.placementApplications, next);
-  return next;
+export async function upsertStudentRecord(student, seedStudents = []) {
+  try {
+    const data = await apiRequest('/students/upsert', {
+      method: 'POST',
+      body: { student }
+    });
+    setJson(STORAGE_KEYS.studentRecords, data.students || []);
+    return data.students || [];
+  } catch {
+    return upsertLocalStudentRecord(student, seedStudents);
+  }
 }
 
-export function updatePlacementApplicationStatus(id, status, reviewerName) {
-  const applications = getPlacementApplications().map(item => {
-    if (item.id !== id) return item;
-    return {
-      ...item,
-      status,
-      reviewedAt: new Date().toISOString(),
-      reviewer: reviewerName || 'Faculty'
-    };
-  });
-  setJson(STORAGE_KEYS.placementApplications, applications);
-  return applications;
+export async function getResumeRequests() {
+  try {
+    const data = await apiRequest('/resume-requests');
+    setJson(STORAGE_KEYS.resumeRequests, data.resumeRequests || []);
+    return data.resumeRequests || [];
+  } catch {
+    return getJson(STORAGE_KEYS.resumeRequests, []);
+  }
 }
 
-export function getOpportunityListingRequests() {
-  return getJson(STORAGE_KEYS.opportunityListingRequests, []);
+export async function addResumeRequest(request) {
+  try {
+    const data = await apiRequest('/resume-requests', {
+      method: 'POST',
+      body: request
+    });
+    setJson(STORAGE_KEYS.resumeRequests, data.resumeRequests || []);
+    return data.resumeRequests || [];
+  } catch {
+    return addLocalItem(STORAGE_KEYS.resumeRequests, request);
+  }
 }
 
-export function addOpportunityListingRequest(request) {
-  const requests = getOpportunityListingRequests();
-  const next = [{ ...request }, ...requests];
-  setJson(STORAGE_KEYS.opportunityListingRequests, next);
-  return next;
+export async function updateResumeRequestStatus(id, status, reviewerName) {
+  try {
+    const data = await apiRequest(`/resume-requests/${id}/status`, {
+      method: 'PATCH',
+      body: { status, reviewer: reviewerName || 'Faculty' }
+    });
+    setJson(STORAGE_KEYS.resumeRequests, data.resumeRequests || []);
+    return data.resumeRequests || [];
+  } catch {
+    return updateLocalStatus(STORAGE_KEYS.resumeRequests, id, status, reviewerName);
+  }
 }
 
-export function updateOpportunityListingRequestStatus(id, status, reviewerName) {
-  const requests = getOpportunityListingRequests().map(item => {
-    if (item.id !== id) return item;
-    return {
-      ...item,
-      status,
-      reviewedAt: new Date().toISOString(),
-      reviewer: reviewerName || 'Faculty'
-    };
-  });
-  setJson(STORAGE_KEYS.opportunityListingRequests, requests);
-  return requests;
+export async function getInternshipApplications() {
+  try {
+    const data = await apiRequest('/applications/internships');
+    setJson(STORAGE_KEYS.internshipApplications, data.internshipApplications || []);
+    return data.internshipApplications || [];
+  } catch {
+    return getJson(STORAGE_KEYS.internshipApplications, []);
+  }
 }
 
-export function getPostedInternships() {
-  return getJson(STORAGE_KEYS.postedInternships, []);
+export async function addInternshipApplication(application) {
+  try {
+    const data = await apiRequest('/applications/internships', {
+      method: 'POST',
+      body: application
+    });
+    setJson(STORAGE_KEYS.internshipApplications, data.internshipApplications || []);
+    return data.internshipApplications || [];
+  } catch {
+    return addLocalItem(STORAGE_KEYS.internshipApplications, application);
+  }
 }
 
-export function addPostedInternship(opportunity) {
-  const items = getPostedInternships();
-  const next = [{ ...opportunity }, ...items];
-  setJson(STORAGE_KEYS.postedInternships, next);
-  return next;
+export async function updateInternshipApplicationStatus(id, status, reviewerName) {
+  try {
+    const data = await apiRequest(`/applications/internships/${id}/status`, {
+      method: 'PATCH',
+      body: { status, reviewer: reviewerName || 'Faculty' }
+    });
+    setJson(STORAGE_KEYS.internshipApplications, data.internshipApplications || []);
+    return data.internshipApplications || [];
+  } catch {
+    return updateLocalStatus(STORAGE_KEYS.internshipApplications, id, status, reviewerName);
+  }
 }
 
-export function getPostedPlacements() {
-  return getJson(STORAGE_KEYS.postedPlacements, []);
+export async function getPlacementApplications() {
+  try {
+    const data = await apiRequest('/applications/placements');
+    setJson(STORAGE_KEYS.placementApplications, data.placementApplications || []);
+    return data.placementApplications || [];
+  } catch {
+    return getJson(STORAGE_KEYS.placementApplications, []);
+  }
 }
 
-export function addPostedPlacement(opportunity) {
-  const items = getPostedPlacements();
-  const next = [{ ...opportunity }, ...items];
-  setJson(STORAGE_KEYS.postedPlacements, next);
-  return next;
+export async function addPlacementApplication(application) {
+  try {
+    const data = await apiRequest('/applications/placements', {
+      method: 'POST',
+      body: application
+    });
+    setJson(STORAGE_KEYS.placementApplications, data.placementApplications || []);
+    return data.placementApplications || [];
+  } catch {
+    return addLocalItem(STORAGE_KEYS.placementApplications, application);
+  }
+}
+
+export async function updatePlacementApplicationStatus(id, status, reviewerName) {
+  try {
+    const data = await apiRequest(`/applications/placements/${id}/status`, {
+      method: 'PATCH',
+      body: { status, reviewer: reviewerName || 'Faculty' }
+    });
+    setJson(STORAGE_KEYS.placementApplications, data.placementApplications || []);
+    return data.placementApplications || [];
+  } catch {
+    return updateLocalStatus(STORAGE_KEYS.placementApplications, id, status, reviewerName);
+  }
+}
+
+export async function getOpportunityListingRequests() {
+  try {
+    const data = await apiRequest('/opportunity-listing-requests');
+    setJson(STORAGE_KEYS.opportunityListingRequests, data.listingRequests || []);
+    return data.listingRequests || [];
+  } catch {
+    return getJson(STORAGE_KEYS.opportunityListingRequests, []);
+  }
+}
+
+export async function addOpportunityListingRequest(request) {
+  try {
+    const data = await apiRequest('/opportunity-listing-requests', {
+      method: 'POST',
+      body: request
+    });
+    setJson(STORAGE_KEYS.opportunityListingRequests, data.listingRequests || []);
+    return data.listingRequests || [];
+  } catch {
+    return addLocalItem(STORAGE_KEYS.opportunityListingRequests, request);
+  }
+}
+
+export async function updateOpportunityListingRequestStatus(id, status, reviewerName) {
+  try {
+    const data = await apiRequest(`/opportunity-listing-requests/${id}/status`, {
+      method: 'PATCH',
+      body: { status, reviewer: reviewerName || 'Faculty' }
+    });
+    setJson(STORAGE_KEYS.opportunityListingRequests, data.listingRequests || []);
+    return data.listingRequests || [];
+  } catch {
+    return updateLocalStatus(STORAGE_KEYS.opportunityListingRequests, id, status, reviewerName);
+  }
+}
+
+export async function getPostedInternships() {
+  try {
+    const data = await apiRequest('/opportunities/internships');
+    setJson(STORAGE_KEYS.postedInternships, data.postedInternships || []);
+    return data.postedInternships || [];
+  } catch {
+    return getJson(STORAGE_KEYS.postedInternships, []);
+  }
+}
+
+export async function addPostedInternship(opportunity) {
+  try {
+    const data = await apiRequest('/opportunities/internships', {
+      method: 'POST',
+      body: opportunity
+    });
+    setJson(STORAGE_KEYS.postedInternships, data.postedInternships || []);
+    return data.postedInternships || [];
+  } catch {
+    return addLocalItem(STORAGE_KEYS.postedInternships, opportunity);
+  }
+}
+
+export async function getPostedPlacements() {
+  try {
+    const data = await apiRequest('/opportunities/placements');
+    setJson(STORAGE_KEYS.postedPlacements, data.postedPlacements || []);
+    return data.postedPlacements || [];
+  } catch {
+    return getJson(STORAGE_KEYS.postedPlacements, []);
+  }
+}
+
+export async function addPostedPlacement(opportunity) {
+  try {
+    const data = await apiRequest('/opportunities/placements', {
+      method: 'POST',
+      body: opportunity
+    });
+    setJson(STORAGE_KEYS.postedPlacements, data.postedPlacements || []);
+    return data.postedPlacements || [];
+  } catch {
+    return addLocalItem(STORAGE_KEYS.postedPlacements, opportunity);
+  }
 }
 
 export function getStorageKeys() {

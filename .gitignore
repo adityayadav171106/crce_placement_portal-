@@ -3,3 +3,4 @@ dist/
 artifacts/
 .env
 npm-debug.log*
+.env.example
